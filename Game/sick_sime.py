@@ -16,7 +16,7 @@ if not pygame.image.get_extended():
 #game constants
 MAX_SHOTS      = 2      #most player bullets onscreen
 ALIEN_ODDS     = 100    #chances a new alien appears
-BOMB_ODDS      = 1    #chances a new bomb will drop
+BOMB_ODDS      = 100    #chances a new bomb will drop
 ALIEN_RELOAD   = 12     #frames between new aliens
 SCREENRECT     = Rect(0, 0, 640, 480)
 SCORE          = 0
@@ -63,7 +63,7 @@ def load_sound(file):
 
 
 class Player(pygame.sprite.Sprite):
-    speed = 10
+    speed = 15
     bounce = 24
     gun_offset = -11
     images = []
@@ -192,7 +192,7 @@ def main(winstyle = 0):
     #Load images, assign to sprite classes
     #(do this before the classes are used, after screen setup)
     
-    img = load_image('kohli.png')
+    img = load_image('fat_guy_beddi.png')
     print(img)
     Player.images = [img, pygame.transform.flip(img, 1, 0)]
     img = load_image('explosion1.gif')
