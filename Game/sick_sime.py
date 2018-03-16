@@ -130,6 +130,7 @@ class Explosion(pygame.sprite.Sprite):
 
 
 class Shot(pygame.sprite.Sprite):
+
     speed = -11
     images = []
     def __init__(self, pos):
@@ -142,8 +143,8 @@ class Shot(pygame.sprite.Sprite):
         if self.rect.top <= 0:
             self.kill()
 
-
 class Bomb(pygame.sprite.Sprite):
+
     speed = 9
     images = []
     def __init__(self, alien):
@@ -157,7 +158,6 @@ class Bomb(pygame.sprite.Sprite):
         if self.rect.bottom >= 470:
             Explosion(self)
             self.kill()
-
 
 class Score(pygame.sprite.Sprite):
     def __init__(self):
