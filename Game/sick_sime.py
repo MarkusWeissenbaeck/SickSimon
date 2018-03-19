@@ -112,7 +112,7 @@ class Essen(pygame.sprite.Sprite):
         self.facing = self.speed
 
         self.rect = self.image.get_rect()
-        self.facing = random.choice((-1,1)) * Alien.speed
+        self.facing = random.choice((-1,1)) * self.speed
         self.rect.right = random.randint(a = 1, b = SCREENRECT.right)
         self.frame = 0
         
@@ -212,8 +212,8 @@ def main(winstyle = 0):
     Shot.images = [load_image('shot.gif')]
 
     #decorate the game window
-    icon = pygame.transform.scale(Alien.images[0], (32, 32))
-    pygame.display.set_icon(icon)
+    #icon = pygame.transform.scale(Alien.images[0], (32, 32))
+    #pygame.display.set_icon(icon)
     pygame.display.set_caption('Sick Simon')
     pygame.mouse.set_visible(0)
     #create the background, tile the bgd image
@@ -226,7 +226,7 @@ def main(winstyle = 0):
 
     #load the sound effects
     boom_sound = load_sound('boom.wav')
-    shoot_sound = load_sound('car_door.wav')
+    shoot_sound = load_sound('fart1.wav')
     if pygame.mixer:
         music = os.path.join(main_dir, 'data', 'house_lo.wav')
         pygame.mixer.music.load(music)
@@ -280,11 +280,11 @@ def main(winstyle = 0):
         player.move(direction)
         firing = keystate[K_SPACE]
         if not player.reloading and firing and len(shots) < MAX_SHOTS:
-            Shot(player.gunpos())
+            Explosion(player)
             shoot_sound.play()
         player.reloading = firing
 
-        # Create new alien
+        # Create new food
         if essen_reload:
             essen_reload = essen_reload-1
         elif not int(random.random() * ESSEN_ODDS):
