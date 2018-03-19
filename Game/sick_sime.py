@@ -18,10 +18,10 @@ from food_items import *
 
 #game constants
 MAX_SHOTS      = 2      #most player bullets onscreen
-ALIEN_ODDS     = 100    #chances a new alien appears
+ESSEN_ODDS     = 100    #chances a new alien appears
 BOMB_ODDS      = 100    #chances a new bomb will drop
-ALIEN_RELOAD   = 12     #frames between new aliens
-SCREENRECT     = Rect(0, 0, 640, 480)
+ESSEN_RELOAD   = 12     #frames between new aliens
+SCREENRECT     = Rect(0, 0, 1200, 800)
 SCORE          = 0
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 
@@ -93,27 +93,7 @@ class Player(pygame.sprite.Sprite):
         return pos, self.rect.top
 
 
-class Alien(pygame.sprite.Sprite):
-    speed = 13
-    animcycle = 12
-    images = []
-    def __init__(self):
-        pygame.sprite.Sprite.__init__(self, self.containers)
-        self.image = self.images[0]
-        self.rect = self.image.get_rect()
-        self.facing = random.choice((-1,1)) * Alien.speed
-        self.frame = 0
-        if self.facing < 0:
-            self.rect.right = SCREENRECT.right
 
-    def update(self):
-        self.rect.move_ip(0, 1)
-        if not SCREENRECT.contains(self.rect):
-            self.facing = -self.facing;
-            self.rect.top = self.rect.bottom + 1
-            self.rect = self.rect.clamp(SCREENRECT)
-        self.frame = self.frame + 1
-        self.image = self.images[self.frame//self.animcycle%3]
 
 class Essen(pygame.sprite.Sprite):
     animciycle = 12
@@ -216,7 +196,7 @@ def main(winstyle = 0):
         pygame.mixer = None
 
     # Set the display mode
-    winstyle = 0  # |FULLSCREEN
+    winstyle = 1  # |FULLSCREEN
     bestdepth = pygame.display.mode_ok(SCREENRECT.size, winstyle, 32)
     screen = pygame.display.set_mode(SCREENRECT.size, winstyle, bestdepth)
 
@@ -228,16 +208,14 @@ def main(winstyle = 0):
     Player.images = [img, pygame.transform.flip(img, 1, 0)]
     img = load_image('explosion1.gif')
     Explosion.images = [img, pygame.transform.flip(img, 1, 1)]
-    Alien.images = load_images('kohli.png', 'kohli.png', 'kohli.png')
     Bomb.images = [load_image('bomb.gif')]
     Shot.images = [load_image('shot.gif')]
 
     #decorate the game window
     icon = pygame.transform.scale(Alien.images[0], (32, 32))
     pygame.display.set_icon(icon)
-    pygame.display.set_caption('Pygame Aliens')
+    pygame.display.set_caption('Sick Simon')
     pygame.mouse.set_visible(0)
-
     #create the background, tile the bgd image
     bgdtile = load_image('background.gif')
     background = pygame.Surface(SCREENRECT.size)
@@ -256,17 +234,14 @@ def main(winstyle = 0):
 
     # Initialize Game Groups
     essen = pygame.sprite.Group()
-    aliens = pygame.sprite.Group()
     shots = pygame.sprite.Group()
     bombs = pygame.sprite.Group()
     all = pygame.sprite.RenderUpdates()
-    lastalien = pygame.sprite.GroupSingle()
     last_essen = pygame.sprite.GroupSingle()
     #assign default groups to each sprite class
     Essen.containers = essen, all, last_essen
     #assign default groups to each sprite class
     Player.containers = all
-    Alien.containers = aliens, all, lastalien
     Shot.containers = shots, all
     Bomb.containers = bombs, all
     Explosion.containers = all
@@ -274,14 +249,14 @@ def main(winstyle = 0):
 
     #Create Some Starting Values
     global score
-    alienreload = ALIEN_RELOAD
+    essen_reload = ESSEN_RELOAD
     kills = 0
     clock = pygame.time.Clock()
 
     #initialize our starting sprites
     global SCORE
     player = Player()
-    Alien() #note, this 'lives' because it goes into a sprite group
+    Essen() #note, this 'lives' because it goes into a sprite group
     if pygame.font:
         all.add(Score())
         
@@ -310,40 +285,25 @@ def main(winstyle = 0):
         player.reloading = firing
 
         # Create new alien
-        if alienreload:
-            alienreload = alienreload - 1
-        elif not int(random.random() * ALIEN_ODDS):
+        if essen_reload:
+            essen_reload = essen_reload-1
+        elif not int(random.random() * ESSEN_ODDS):
             Essen()
-            alienreload = ALIEN_RELOAD
+            essen_reload = ESSEN_RELOAD
 
 
         # Detect collisions
-        for alien in pygame.sprite.spritecollide(player, aliens, 1):
-            boom_sound.play()
-            Explosion(alien)
-            Explosion(player)
-            SCORE = SCORE + 1
-            player.kill()
+        
         
         for gericht in pygame.sprite.spritecollide(player, essen, 1):
             # wenn was gscheids dann dick bonus punkte
             if gericht.type in 'gscheid':
                 SCORE = SCORE + gericht.nutritional_value
-            # wenn gemüse einfach so das wars
+            # wenn gemuese einfach so das wars
             if gericht.type in 'gemuese':
                 player.kill()
             # TO DO: IMPLEMENT BOOST FUNCTIONS
             gericht.kill()
-        for alien in pygame.sprite.groupcollide(shots, aliens, 1, 1).keys():
-            boom_sound.play()
-            Explosion(alien)
-            SCORE = SCORE + 1
-
-        for bomb in pygame.sprite.spritecollide(player, bombs, 1):
-            boom_sound.play()
-            Explosion(player)
-            Explosion(bomb)
-            player.kill()
 
         #draw the scene
         dirty = all.draw(screen)
