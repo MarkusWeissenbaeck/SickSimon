@@ -8,7 +8,8 @@ from pygame.locals import *
 
 from PIL import Image
 
-
+# import intro
+from Intro import*
 #see if we can load more than standard BMP
 if not pygame.image.get_extended():
     raise SystemExit("Sorry, extended image module required")
@@ -200,6 +201,8 @@ def main(winstyle = 0):
     bestdepth = pygame.display.mode_ok(SCREENRECT.size, winstyle, 32)
     screen = pygame.display.set_mode(SCREENRECT.size, winstyle, bestdepth)
 
+
+    game_intro(screen)
     #Load images, assign to sprite classes
     #(do this before the classes are used, after screen setup)
     
@@ -210,6 +213,7 @@ def main(winstyle = 0):
     Explosion.images = [img, pygame.transform.flip(img, 1, 1)]
     Bomb.images = [load_image('bomb.gif')]
     Shot.images = [load_image('shot.gif')]
+    
 
     #decorate the game window
     #icon = pygame.transform.scale(Alien.images[0], (32, 32))
@@ -226,7 +230,11 @@ def main(winstyle = 0):
 
     #load the sound effects
     boom_sound = load_sound('boom.wav')
-    shoot_sound = load_sound('fart1.wav')
+    fart_sound = load_sound('fart1.wav')
+    eat_sound = load_sound('eating1.wav')
+    vomit_sound = load_sound('vomit.wav')
+    
+    
     if pygame.mixer:
         music = os.path.join(main_dir, 'data', 'house_lo.wav')
         pygame.mixer.music.load(music)
@@ -281,7 +289,7 @@ def main(winstyle = 0):
         firing = keystate[K_SPACE]
         if not player.reloading and firing and len(shots) < MAX_SHOTS:
             Explosion(player)
-            shoot_sound.play()
+            fart_sound.play()
         player.reloading = firing
 
         # Create new food
@@ -299,9 +307,14 @@ def main(winstyle = 0):
             # wenn was gscheids dann dick bonus punkte
             if gericht.type in 'gscheid':
                 SCORE = SCORE + gericht.nutritional_value
+                eat_sound.play()
+                
             # wenn gemuese einfach so das wars
             if gericht.type in 'gemuese':
+                vomit_sound.play()
+                fart_sound.play()
                 player.kill()
+                
             # TO DO: IMPLEMENT BOOST FUNCTIONS
             gericht.kill()
 
