@@ -5,6 +5,7 @@ Created on Mon Mar 19 20:48:19 2018
 
 @author: markus
 """
+Basti= "lel"
 import pygame
 
 
