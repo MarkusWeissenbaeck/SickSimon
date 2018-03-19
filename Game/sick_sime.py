@@ -8,10 +8,13 @@ from pygame.locals import *
 
 from PIL import Image
 
+
 #see if we can load more than standard BMP
 if not pygame.image.get_extended():
     raise SystemExit("Sorry, extended image module required")
 
+# food items dict
+from food_items import *
 
 #game constants
 MAX_SHOTS      = 2      #most player bullets onscreen
@@ -104,7 +107,7 @@ class Alien(pygame.sprite.Sprite):
             self.rect.right = SCREENRECT.right
 
     def update(self):
-        self.rect.move_ip(self.facing, 0)
+        self.rect.move_ip(0, 1)
         if not SCREENRECT.contains(self.rect):
             self.facing = -self.facing;
             self.rect.top = self.rect.bottom + 1
@@ -112,6 +115,33 @@ class Alien(pygame.sprite.Sprite):
         self.frame = self.frame + 1
         self.image = self.images[self.frame//self.animcycle%3]
 
+class Essen(pygame.sprite.Sprite):
+    animciycle = 12
+    def __init__(self):
+        identity = get_food_item()
+        # image
+        self.image = load_image(identity[-1])
+        # speed (10 is normal)
+        self.speed = identity[2]
+        # type('gscheid', gemuese' or 'boost')
+        self.type = identity[1]
+        if self.type in 'gscheid':
+            self.nutritional_value = identity[-2]
+        # init
+        pygame.sprite.Sprite.__init__(self, self.containers)
+        self.facing = self.speed
+
+        self.rect = self.image.get_rect()
+        self.facing = random.choice((-1,1)) * Alien.speed
+        self.rect.right = random.randint(a = 1, b = SCREENRECT.right)
+        self.frame = 0
+        
+    def update(self):
+        self.rect.move_ip(0, 1)
+        if not SCREENRECT.contains(self.rect):
+            self.kill()
+
+        self.frame = self.frame + 1
 
 class Explosion(pygame.sprite.Sprite):
     defaultlife = 12
@@ -142,6 +172,7 @@ class Shot(pygame.sprite.Sprite):
         self.rect.move_ip(0, self.speed)
         if self.rect.top <= 0:
             self.kill()
+
 
 class Bomb(pygame.sprite.Sprite):
 
@@ -224,12 +255,15 @@ def main(winstyle = 0):
         pygame.mixer.music.play(-1)
 
     # Initialize Game Groups
+    essen = pygame.sprite.Group()
     aliens = pygame.sprite.Group()
     shots = pygame.sprite.Group()
     bombs = pygame.sprite.Group()
     all = pygame.sprite.RenderUpdates()
     lastalien = pygame.sprite.GroupSingle()
-
+    last_essen = pygame.sprite.GroupSingle()
+    #assign default groups to each sprite class
+    Essen.containers = essen, all, last_essen
     #assign default groups to each sprite class
     Player.containers = all
     Alien.containers = aliens, all, lastalien
@@ -250,8 +284,7 @@ def main(winstyle = 0):
     Alien() #note, this 'lives' because it goes into a sprite group
     if pygame.font:
         all.add(Score())
-
-
+        
     while player.alive():
 
         #get input
@@ -280,12 +313,9 @@ def main(winstyle = 0):
         if alienreload:
             alienreload = alienreload - 1
         elif not int(random.random() * ALIEN_ODDS):
-            Alien()
+            Essen()
             alienreload = ALIEN_RELOAD
 
-        # Drop bombs
-        if lastalien and not int(random.random() * BOMB_ODDS):
-            Bomb(lastalien.sprite)
 
         # Detect collisions
         for alien in pygame.sprite.spritecollide(player, aliens, 1):
@@ -294,7 +324,16 @@ def main(winstyle = 0):
             Explosion(player)
             SCORE = SCORE + 1
             player.kill()
-
+        
+        for gericht in pygame.sprite.spritecollide(player, essen, 1):
+            # wenn was gscheids dann dick bonus punkte
+            if gericht.type in 'gscheid':
+                SCORE = SCORE + gericht.nutritional_value
+            # wenn gemüse einfach so das wars
+            if gericht.type in 'gemuese':
+                player.kill()
+            # TO DO: IMPLEMENT BOOST FUNCTIONS
+            gericht.kill()
         for alien in pygame.sprite.groupcollide(shots, aliens, 1, 1).keys():
             boom_sound.play()
             Explosion(alien)
