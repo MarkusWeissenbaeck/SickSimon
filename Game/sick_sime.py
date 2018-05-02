@@ -130,7 +130,7 @@ class Essen(pygame.sprite.Sprite):
         
     def update(self,level):
         if not self.set_level:
-            self.speed = self.speed * (level+1)*10
+            self.speed = self.speed * (level+1)*2
             self.set_level = True
             
         self.rect.move_ip(0, self.speed)

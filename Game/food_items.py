@@ -13,9 +13,9 @@ Created on Mon Mar 19 19:31:00 2018
 '''
 
 import numpy as np
-food_items = [['apfel','gemuese', 0.5, 2, 'Apfel.gif'],
-              ['birne','gemuese', 0.5, 2, 'Birne.gif'],
-              ['braten','gscheid', 0.5, 10, 20, 'Banane.gif']
+food_items = [['apfel','gemuese', 1, 2, 'Apfel.gif'],
+              ['birne','gemuese', 1, 2, 'Birne.gif'],
+              ['braten','gscheid', 1, 10, 20, 'Banane.gif']
               ]
 
 # occurrences
