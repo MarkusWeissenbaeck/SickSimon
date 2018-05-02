@@ -20,11 +20,14 @@ from food_items import *
 #game constants
 MAX_SHOTS      = 2      #most player bullets onscreen
 ESSEN_ODDS     = 100    #chances a new alien appears
+ESSEN_SIZE = [60, 60]
 BOMB_ODDS      = 100    #chances a new bomb will drop
-ESSEN_RELOAD   = 12     #frames between new aliens
+ESSEN_RELOAD   = 1     #frames between new aliens
 SCREENRECT     = Rect(0, 0, 1200, 800)
 SCORE          = 0
 main_dir = os.path.split(os.path.abspath(__file__))[0]
+LEVEL_SCORES = [20, 60, 80, 100, 120]
+LEVEL_SPEEDS = [15, 13, 10, 9, 8]
 
 def load_image(file):
     "loads an image, prepares it for play"
@@ -71,37 +74,45 @@ class Player(pygame.sprite.Sprite):
     bounce = 24
     gun_offset = -11
     images = []
+    speeds = []
     def __init__(self):
         pygame.sprite.Sprite.__init__(self, self.containers)
-        self.image = self.images[0]
+        self.image = self.images[0][0]
         self.rect = self.image.get_rect(midbottom=SCREENRECT.midbottom)
         self.reloading = 0
         self.origtop = self.rect.top
         self.facing = -1
-
+        self.level = 0
     def move(self, direction):
         if direction: self.facing = direction
         self.rect.move_ip(direction*self.speed, 0)
         self.rect = self.rect.clamp(SCREENRECT)
         if direction < 0:
-            self.image = self.images[0]
+            self.image = self.images[self.level][0]
         elif direction > 0:
-            self.image = self.images[1]
-        self.rect.top = self.origtop - (self.rect.left//self.bounce%2)
+            self.image = self.images[self.level][1]
+            
+        self.rect.top = self.origtop ## - (self.rect.left//self.bounce%2)
 
     def gunpos(self):
         pos = self.facing*self.gun_offset + self.rect.centerx
         return pos, self.rect.top
-
-
-
+    
+    def update_level(self, level):
+        ''' update level: speed (int), graphics (image)'''
+        
+        self.speed = self.speeds[level]
+        self.level = level
+        self.image = self.images[level][0]
 
 class Essen(pygame.sprite.Sprite):
     animciycle = 12
+    set_level = False
     def __init__(self):
         identity = get_food_item()
         # image
-        self.image = load_image(identity[-1])
+        self.image = pygame.transform.scale(load_image('Essen/' + identity[-1]), ESSEN_SIZE)
+        
         # speed (10 is normal)
         self.speed = identity[2]
         # type('gscheid', gemuese' or 'boost')
@@ -117,8 +128,12 @@ class Essen(pygame.sprite.Sprite):
         self.rect.right = random.randint(a = 1, b = SCREENRECT.right)
         self.frame = 0
         
-    def update(self):
-        self.rect.move_ip(0, 1)
+    def update(self,level):
+        if not self.set_level:
+            self.speed = self.speed * (level+1)*10
+            self.set_level = True
+            
+        self.rect.move_ip(0, self.speed)
         if not SCREENRECT.contains(self.rect):
             self.kill()
 
@@ -134,7 +149,7 @@ class Explosion(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=actor.rect.center)
         self.life = self.defaultlife
 
-    def update(self):
+    def update(self,level):
         self.life = self.life - 1
         self.image = self.images[self.life//self.animcycle%2]
         if self.life <= 0: self.kill()
@@ -149,7 +164,7 @@ class Shot(pygame.sprite.Sprite):
         self.image = self.images[0]
         self.rect = self.image.get_rect(midbottom=pos)
 
-    def update(self):
+    def update(self,level):
         self.rect.move_ip(0, self.speed)
         if self.rect.top <= 0:
             self.kill()
@@ -165,7 +180,7 @@ class Bomb(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(midbottom=
                     alien.rect.move(0,5).midbottom)
 
-    def update(self):
+    def update(self,level):
         self.rect.move_ip(0, self.speed)
         if self.rect.bottom >= 470:
             Explosion(self)
@@ -174,14 +189,14 @@ class Bomb(pygame.sprite.Sprite):
 class Score(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.font = pygame.font.Font(None, 20)
+        self.font = pygame.font.Font(None, 45)
         self.font.set_italic(1)
         self.color = Color('white')
         self.lastscore = -1
-        self.update()
-        self.rect = self.image.get_rect().move(10, 450)
+        self.update(0)
+        self.rect = self.image.get_rect().move(10, 10)
 
-    def update(self):
+    def update(self,level):
         if SCORE != self.lastscore:
             self.lastscore = SCORE
             msg = "Score: %d" % SCORE
@@ -207,8 +222,18 @@ def main(winstyle = 0):
     #(do this before the classes are used, after screen setup)
     
     img = load_image('fat_guy_beddi.png')
-    print(img)
-    Player.images = [img, pygame.transform.flip(img, 1, 0)]
+    ''' 
+        initialize level artwork
+        
+    '''
+
+    Player.images = [[load_image(i), pygame.transform.flip(load_image(i), 1, 0)] for i in ['fat_guy_snacki.png',
+                                          'fat_guy_pizza.png',
+                                          'fat_guy_pizza.png',
+                                          'fat_guy_beddi.png',
+                                          'fat_guy_beddi.png']]
+    Player.speeds = LEVEL_SPEEDS
+    print(Player.images)
     img = load_image('explosion1.gif')
     Explosion.images = [img, pygame.transform.flip(img, 1, 1)]
     Bomb.images = [load_image('bomb.gif')]
@@ -221,10 +246,19 @@ def main(winstyle = 0):
     pygame.display.set_caption('Sick Simon')
     pygame.mouse.set_visible(0)
     #create the background, tile the bgd image
+    
     bgdtile = load_image('background.gif')
+
+    background_images = [pygame.transform.scale(load_image(i), SCREENRECT.size) for i in ['fat_guy_snacki.png',
+                                          'background.gif',
+                                          'background.gif',
+                                          'background.gif',
+                                          'background.gif']]
     background = pygame.Surface(SCREENRECT.size)
-    for x in range(0, SCREENRECT.width, bgdtile.get_width()):
-        background.blit(bgdtile, (x, 0))
+    for x in range(0, SCREENRECT.width, background_images[0].get_width()):
+        background.blit(background_images[0], (x,0))
+    for y in range(0, SCREENRECT.height, background_images[0].get_height()):
+        background.blit(background_images[0], (0,y))    
     screen.blit(background, (0,0))
     pygame.display.flip()
 
@@ -234,7 +268,9 @@ def main(winstyle = 0):
     eat_sound = load_sound('eating1.wav')
     vomit_sound = load_sound('vomit.wav')
     
-    
+    # initialize levels
+    level = 0
+
     if pygame.mixer:
         music = os.path.join(main_dir, 'data', 'house_lo.wav')
         pygame.mixer.music.load(music)
@@ -254,9 +290,10 @@ def main(winstyle = 0):
     Bomb.containers = bombs, all
     Explosion.containers = all
     Score.containers = all
+    
 
+    
     #Create Some Starting Values
-    global score
     essen_reload = ESSEN_RELOAD
     kills = 0
     clock = pygame.time.Clock()
@@ -267,21 +304,37 @@ def main(winstyle = 0):
     Essen() #note, this 'lives' because it goes into a sprite group
     if pygame.font:
         all.add(Score())
-        
-    while player.alive():
+    
 
+    
+    while player.alive():
         #get input
         for event in pygame.event.get():
             if event.type == QUIT or \
                 (event.type == KEYDOWN and event.key == K_ESCAPE):
                     return
+
+ 
+        if SCORE>LEVEL_SCORES[level] and level is not 4:
+            ''' update into new level'''
+            
+            level = level+1      
+            player.update_level(level)
+            # update background
+            for x in range(0, SCREENRECT.width, background_images[level].get_width()):
+                background.blit(background_images[level], (x,0))
+            for y in range(0, SCREENRECT.height, background_images[level].get_height()):
+                background.blit(background_images[level], (0,y))    
+                screen.blit(background, (0,0))
+                pygame.display.flip()
+                
         keystate = pygame.key.get_pressed()
 
         # clear/erase the last drawn sprites
         all.clear(screen, background)
 
         #update all the sprites
-        all.update()
+        all.update(level)
 
         #handle player input
         direction = keystate[K_RIGHT] - keystate[K_LEFT]

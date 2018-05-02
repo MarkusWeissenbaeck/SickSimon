@@ -13,8 +13,10 @@ Created on Mon Mar 19 19:31:00 2018
 '''
 
 import numpy as np
-food_items = [['kohl','gemuese', 5, 2, 'kohli.png'],
-              ['braten','gscheid', 5, 10, 20, 'fat_guy_pizza.png']]
+food_items = [['apfel','gemuese', 0.5, 2, 'Apfel.gif'],
+              ['birne','gemuese', 0.5, 2, 'Birne.gif'],
+              ['braten','gscheid', 0.5, 10, 20, 'Banane.gif']
+              ]
 
 # occurrences
 occurence = np.array([fod_it[3] for fod_it in food_items])
