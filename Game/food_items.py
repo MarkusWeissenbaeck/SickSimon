@@ -16,8 +16,10 @@ import numpy as np
 food_items = [['apfel','gemuese', 1, 2, 'Apfel.gif'],
               ['birne','gemuese', 1, 2, 'Birne.gif'],
               ['braten','gscheid', 1, 10, 20, 'Banane.gif']
+              ['mate','boost', 1, 1, 'energy', 'mate.gif']
               ]
 
+              
 # occurrences
 occurence = np.array([fod_it[3] for fod_it in food_items])
 occurence = occurence/occurence.sum()

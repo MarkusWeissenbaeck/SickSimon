@@ -19,7 +19,7 @@ from food_items import *
 
 #game constants
 MAX_SHOTS      = 2      #most player bullets onscreen
-ESSEN_ODDS     = 100    #chances a new alien appears
+ESSEN_ODDS     = 10    #chances a new alien appears
 ESSEN_SIZE = [60, 60]
 BOMB_ODDS      = 100    #chances a new bomb will drop
 ESSEN_RELOAD   = 1     #frames between new aliens
@@ -119,6 +119,8 @@ class Essen(pygame.sprite.Sprite):
         self.type = identity[1]
         if self.type in 'gscheid':
             self.nutritional_value = identity[-2]
+        if self.type in 'boost':
+            self.boost_type = identity[-2]
         # init
         pygame.sprite.Sprite.__init__(self, self.containers)
         self.facing = self.speed
@@ -361,6 +363,13 @@ def main(winstyle = 0):
             if gericht.type in 'gscheid':
                 SCORE = SCORE + gericht.nutritional_value
                 eat_sound.play()
+            if gericht.type in 'boost':
+                if gericht.boost_type in 'energy':
+                    pass
+                if gericht.boost_type in 'weed':
+                    pass
+                if gericht.boost_type in 'multi':
+                    pass
                 
             # wenn gemuese einfach so das wars
             if gericht.type in 'gemuese':
