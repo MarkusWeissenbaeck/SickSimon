@@ -33,15 +33,20 @@ LEVEL_SPEEDS = [15, 13, 10, 9, 8]
 
 # Booster stuff
 SPEED_MODIFIER = 1
-SPEED_MODIFIER_ENERGY = 3
+SPEED_MODIFIER_ENERGY = 1.5
 SPEED_MODE = False
 # Should be dividable by 40
-LENGTH_BOOST_ENERGY = 400
+LENGTH_BOOST_ENERGY = 450
 
 WEED_MODE = False
-LENGTH_BOOST_WEED = 400
+LENGTH_BOOST_WEED = 450
 WEED_MOV_MIN = -8
 WEED_MOV_MAX = 8
+
+LENGTH_BOOST_MULTI = 400
+MULTI_MODE = False
+MULTI_BOOST = 2
+
 
 def load_image(file):
     "loads an image, prepares it for play"
@@ -99,7 +104,7 @@ class Player(pygame.sprite.Sprite):
         self.level = 0
     def move(self, direction):
         if direction: self.facing = direction
-        self.rect.move_ip(direction*self.speed, 0)
+        self.rect.move_ip(direction*self.speed* SPEED_MODIFIER, 0) 
         self.rect = self.rect.clamp(SCREENRECT)
         if direction < 0:
             self.image = self.images[self.level][0]
@@ -114,7 +119,7 @@ class Player(pygame.sprite.Sprite):
     
     def update_level(self, level):
         ''' update level: speed (int), graphics (image)'''
-        self.speed = self.speeds[level] * SPEED_MODIFIER
+        self.speed = self.speeds[level]
         self.level = level
         self.image = self.images[level][0]
 
@@ -282,13 +287,12 @@ def main(winstyle = 0):
 
     Player.images = [[load_image(i), pygame.transform.flip(load_image(i), 1, 0)] for i in ['FatGuys/simi_klein.gif',
                                           'FatGuys/fat_guy_snack.gif',
-                                          'FatGuys/fat_guy_pizza.gif',
+                                          'FatGuys/fat_guy_eyes.gif',
                                           'FatGuys/fat_guy_beddi.gif',
                                           'FatGuys/blobby.gif']]
     
     
     Player.speeds = LEVEL_SPEEDS
-    print(Player.images)
     img = load_image('explosion1.gif')
     Explosion.images = [img, pygame.transform.flip(img, 1, 1)]
     Bomb.images = [load_image('bomb.gif')]
@@ -305,13 +309,13 @@ def main(winstyle = 0):
     
     bgdtile = load_image('background.gif')
 
-    background_images = [pygame.transform.scale(load_image(i), SCREENRECT.size) for i in ['background.gif',
-                                          'background.gif',
+    background_images = [pygame.transform.scale(load_image(i), SCREENRECT.size) for i in ['background/LEW.jpg',
+                                          'background/fatdude.jpg',
                                           'background.gif',
                                           'background.gif',
                                           'background.gif']]
     # background pictures for energy and weed boosters (in that order)
-    background_boosters = [pygame.transform.scale(load_image(i), SCREENRECT.size) for i in ['fat_guy_snacki.png','fat_guy_snacki.png']]   
+    background_boosters = [pygame.transform.scale(load_image(i), SCREENRECT.size) for i in ['background/fat_party.jpg','background/weed.jpg']]   
     background = pygame.Surface(SCREENRECT.size)
     for x in range(0, SCREENRECT.width, background_images[0].get_width()):
         background.blit(background_images[0], (x,0))
@@ -326,12 +330,14 @@ def main(winstyle = 0):
     eat_sound = load_sound('eating1.wav')
     vomit_sound = load_sound('vomit.wav')
     
+    music_weed = os.path.join(main_dir, 'data/Sounds', 'weed_song.mp3')
+    music_party = os.path.join(main_dir, 'data/Sounds', 'party_song.mp3')
     # initialize levels
     level = 0
 
     if pygame.mixer:
-        music = os.path.join(main_dir, 'data', 'house_lo.wav')
-        pygame.mixer.music.load(music)
+        music_stanni = os.path.join(main_dir, 'data', 'house_lo.wav')
+        pygame.mixer.music.load(music_stanni)
         pygame.mixer.music.play(-1)
 
     # Initialize Game Groups
@@ -360,8 +366,10 @@ def main(winstyle = 0):
     global SPEED_MODIFIER
     global SPEED_MODE
     global WEED_MODE
+    global MULTI_MODE
     speed_counter = -1
-    
+    multi_counter = -1
+    weed_counter = -1
     player = Player()
     Essen() #note, this 'lives' because it goes into a sprite group
     if pygame.font:
@@ -421,19 +429,21 @@ def main(winstyle = 0):
         for gericht in pygame.sprite.spritecollide(player, essen, 1):
             # wenn was gscheids dann dick bonus punkte
             if gericht.type in 'gscheid':
-                SCORE = SCORE + gericht.nutritional_value
+                SCORE = SCORE + gericht.nutritional_value * (1 + MULTI_MODE*MULTI_BOOST)
                 eat_sound.play()
             if gericht.type in 'boost':
                 if gericht.boost_type in 'energy':
-                    all.add(Booster('energy', LENGTH_BOOST_ENERGY))
+                    #all.add(Booster('energy', LENGTH_BOOST_ENERGY))
                     speed_counter == -1
                     SPEED_MODE = True
                 if gericht.boost_type in 'weed':
-                    all.add(Booster('weed', 1000))
+                    #all.add(Booster('weed', LENGTH_BOOST_WEED))
                     weed_counter = -1
                     WEED_MODE = True
                 if gericht.boost_type in 'multi':
-                    all.add(Booster('multi', 1000))
+                    #all.add(Booster('multi', LENGTH_BOOST_MULTI))
+                    multi_counter = -1
+                    MULTI_MODE = True
             # wenn gemuese einfach so das wars
             if gericht.type in 'gemuese':
                 vomit_sound.play()
@@ -454,6 +464,9 @@ def main(winstyle = 0):
                 screen.blit(background, (0,0))
                 pygame.display.flip()    
                 speed_counter = LENGTH_BOOST_ENERGY
+                # play song
+                pygame.mixer.music.load(music_party)
+                pygame.mixer.music.play(-1)
             else:
                 speed_counter = speed_counter-1
 
@@ -467,7 +480,9 @@ def main(winstyle = 0):
                     background.blit(background_images[level], (0,y))    
                 screen.blit(background, (0,0))
                 pygame.display.flip()
-        
+                # play standard song
+                pygame.mixer.music.load(music_stanni)
+                pygame.mixer.music.play(-1)
         if WEED_MODE:
             if weed_counter == -1:
                 # update background
@@ -478,21 +493,35 @@ def main(winstyle = 0):
                 screen.blit(background, (0,0))
                 pygame.display.flip()    
                 weed_counter = LENGTH_BOOST_WEED
+                # play song
+                pygame.mixer.music.load(music_weed)
+                pygame.mixer.music.play(-1)
             else:
-                weed_counter = speed_counter-1
+                weed_counter = weed_counter-1
 
             if weed_counter == 0:
                 WEED_MODE = False
-                SPEED_MODIFIER = 1
-                speed_counter = -1
+                weed_counter = -1
                 for x in range(0, SCREENRECT.width, background_images[level].get_width()):
                     background.blit(background_images[level], (x,0))
                 for y in range(0, SCREENRECT.height, background_images[level].get_height()):
                     background.blit(background_images[level], (0,y))    
                 screen.blit(background, (0,0))
-                pygame.display.flip()        
-        
-        
+                pygame.display.flip()
+                # play standard song
+                pygame.mixer.music.load(music_stanni)
+                pygame.mixer.music.play(-1)
+        if MULTI_MODE:
+            if multi_counter == -1:
+                # update background
+                multi_counter = LENGTH_BOOST_WEED
+            else:
+                multi_counter = multi_counter-1
+
+            if weed_counter == 0:
+                MULTI_MODE = False
+                multi_counter = -1
+                
         #draw the scene
         dirty = all.draw(screen)
         pygame.display.update(dirty)
