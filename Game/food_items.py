@@ -15,8 +15,23 @@ Created on Mon Mar 19 19:31:00 2018
 import numpy as np
 food_items = [['apfel','gemuese', 1, 2, 'Apfel.gif'],
               ['birne','gemuese', 1, 2, 'Birne.gif'],
-              ['braten','gscheid', 1, 10, 20, 'Banane.gif'],
-              ['mate','boost', 1, 1, 'energy', 'mate.gif']
+              ['banane','gemuese', 1, 10,'Banane.gif'],
+              ['mate','boost', 1, 1, 'energy', 'Mate.gif'],
+              ['brokkoli','gemuese', 1, 1,  'Brokkoli.gif'],
+              ['butter','gscheid', 1, 1, 10, 'Butter.gif'],
+              ['booster','boost', 1, 1, 'energy', 'EnergyBooster.gif'],
+              ['crazywolf','boost', 1, 1, 'energy', 'EnergyCrazyWolf.gif'],
+              ['flyingpower','boost', 1, 1, 'energy', 'EneryFlyingPower.gif'],
+              ['gurke','gemuese', 1, 1, 'Gurke.gif'],
+              ['joint','boost', 1, 1, 'weed', 'Joint.gif'],
+              ['lachgummi','gscheid', 1, 1, 20, 'LachgummiSauer.gif'],
+              ['milchreis','gscheid', 1, 1, 20, 'Milchreis.gif'],
+              ['salat','gemuese', 1, 1,  'Salat.gif'],
+              ['schweinebauch','gscheid', 1, 1, 20, 'Schweinebauch.gif'],
+              ['steak','gscheid', 1, 1, 20, 'Steak.gif'],
+              ['tunfisch','gscheid', 1, 1, 20, 'Tunfisch.gif'],
+              ['zucker','gscheid', 1, 1, 20, 'Zucker.gif']
+
               ]
 
               
