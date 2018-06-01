@@ -17,6 +17,8 @@ if not pygame.image.get_extended():
 # food items dict
 from food_items import *
 
+
+
 #game constants
 MAX_SHOTS      = 2      #most player bullets onscreen
 ESSEN_ODDS     = 10    #chances a new alien appears
@@ -26,8 +28,20 @@ ESSEN_RELOAD   = 1     #frames between new aliens
 SCREENRECT     = Rect(0, 0, 1200, 800)
 SCORE          = 0
 main_dir = os.path.split(os.path.abspath(__file__))[0]
-LEVEL_SCORES = [20, 60, 80, 100, 120]
+LEVEL_SCORES = [200, 1000, 4000, 8000, 16000]
 LEVEL_SPEEDS = [15, 13, 10, 9, 8]
+
+# Booster stuff
+SPEED_MODIFIER = 1
+SPEED_MODIFIER_ENERGY = 3
+SPEED_MODE = False
+# Should be dividable by 40
+LENGTH_BOOST_ENERGY = 400
+
+WEED_MODE = False
+LENGTH_BOOST_WEED = 400
+WEED_MOV_MIN = -8
+WEED_MOV_MAX = 8
 
 def load_image(file):
     "loads an image, prepares it for play"
@@ -100,8 +114,7 @@ class Player(pygame.sprite.Sprite):
     
     def update_level(self, level):
         ''' update level: speed (int), graphics (image)'''
-        
-        self.speed = self.speeds[level]
+        self.speed = self.speeds[level] * SPEED_MODIFIER
         self.level = level
         self.image = self.images[level][0]
 
@@ -135,7 +148,7 @@ class Essen(pygame.sprite.Sprite):
             self.speed = self.speed * (level+1)*2
             self.set_level = True
             
-        self.rect.move_ip(0, self.speed)
+        self.rect.move_ip(WEED_MODE * random.randint(WEED_MOV_MIN, WEED_MOV_MAX), self.speed)
         if not SCREENRECT.contains(self.rect):
             self.kill()
 
@@ -147,6 +160,7 @@ class Explosion(pygame.sprite.Sprite):
     images = []
     def __init__(self, actor):
         pygame.sprite.Sprite.__init__(self, self.containers)
+        self.font = pygame.font.Font(None, 45)
         self.image = self.images[0]
         self.rect = self.image.get_rect(center=actor.rect.center)
         self.life = self.defaultlife
@@ -188,6 +202,43 @@ class Bomb(pygame.sprite.Sprite):
             Explosion(self)
             self.kill()
 
+class Booster(pygame.sprite.Sprite):
+    defaultlive = 60
+    
+    def __init__(self, booster_type, time_length):
+        
+        pygame.sprite.Sprite.__init__(self)
+        self.font = pygame.font.Font(None, 45)
+        self.font.set_italic(1)
+        self.color = Color('white')
+        self.booster_type = booster_type
+        if booster_type in 'energy':
+            self.image = self.images[0]
+            x_val = 200
+            SPEED_MODIFIER= 20
+        if booster_type in 'weed':
+            self.image = self.images[1]
+            x_val= 160
+        if booster_type in 'multi':
+            self.image = self.images[2]
+            x_val = 120
+        self.rect = self.image.get_rect().move(x_val, 10)
+        self.life = time_length
+
+        # crap
+        self.lastscore = -1
+        self.update(0)
+        print(self.image)
+    def update(self,level):
+        self.life = self.life-1
+
+        if self.life < 1:
+            # revert changes
+            if self.booster_type in 'engergy':
+                SPEED_MODIFIER = 1
+            # kill object
+            self.kill()
+
 class Score(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -197,7 +248,7 @@ class Score(pygame.sprite.Sprite):
         self.lastscore = -1
         self.update(0)
         self.rect = self.image.get_rect().move(10, 10)
-
+        print(self.image)
     def update(self,level):
         if SCORE != self.lastscore:
             self.lastscore = SCORE
@@ -229,18 +280,21 @@ def main(winstyle = 0):
         
     '''
 
-    Player.images = [[load_image(i), pygame.transform.flip(load_image(i), 1, 0)] for i in ['fat_guy_snacki.png',
-                                          'fat_guy_pizza.png',
-                                          'fat_guy_pizza.png',
-                                          'fat_guy_beddi.png',
-                                          'fat_guy_beddi.png']]
+    Player.images = [[load_image(i), pygame.transform.flip(load_image(i), 1, 0)] for i in ['FatGuys/simi_klein.gif',
+                                          'FatGuys/fat_guy_snack.gif',
+                                          'FatGuys/fat_guy_pizza.gif',
+                                          'FatGuys/fat_guy_beddi.gif',
+                                          'FatGuys/blobby.gif']]
+    
+    
     Player.speeds = LEVEL_SPEEDS
     print(Player.images)
     img = load_image('explosion1.gif')
     Explosion.images = [img, pygame.transform.flip(img, 1, 1)]
     Bomb.images = [load_image('bomb.gif')]
     Shot.images = [load_image('shot.gif')]
-    
+    # images for the mini-icons that specify which booster is active [energy, weed, multi]
+    Booster.images = [load_image('bomb.gif'), load_image('shot.gif'), load_image('explosion1.gif')]
 
     #decorate the game window
     #icon = pygame.transform.scale(Alien.images[0], (32, 32))
@@ -251,11 +305,13 @@ def main(winstyle = 0):
     
     bgdtile = load_image('background.gif')
 
-    background_images = [pygame.transform.scale(load_image(i), SCREENRECT.size) for i in ['fat_guy_snacki.png',
+    background_images = [pygame.transform.scale(load_image(i), SCREENRECT.size) for i in ['background.gif',
                                           'background.gif',
                                           'background.gif',
                                           'background.gif',
                                           'background.gif']]
+    # background pictures for energy and weed boosters (in that order)
+    background_boosters = [pygame.transform.scale(load_image(i), SCREENRECT.size) for i in ['fat_guy_snacki.png','fat_guy_snacki.png']]   
     background = pygame.Surface(SCREENRECT.size)
     for x in range(0, SCREENRECT.width, background_images[0].get_width()):
         background.blit(background_images[0], (x,0))
@@ -292,21 +348,25 @@ def main(winstyle = 0):
     Bomb.containers = bombs, all
     Explosion.containers = all
     Score.containers = all
-    
+    Booster.containers = all
 
     
     #Create Some Starting Values
     essen_reload = ESSEN_RELOAD
-    kills = 0
     clock = pygame.time.Clock()
 
     #initialize our starting sprites
     global SCORE
+    global SPEED_MODIFIER
+    global SPEED_MODE
+    global WEED_MODE
+    speed_counter = -1
+    
     player = Player()
     Essen() #note, this 'lives' because it goes into a sprite group
     if pygame.font:
         all.add(Score())
-    
+        
 
     
     while player.alive():
@@ -365,12 +425,15 @@ def main(winstyle = 0):
                 eat_sound.play()
             if gericht.type in 'boost':
                 if gericht.boost_type in 'energy':
-                    pass
+                    all.add(Booster('energy', LENGTH_BOOST_ENERGY))
+                    speed_counter == -1
+                    SPEED_MODE = True
                 if gericht.boost_type in 'weed':
-                    pass
+                    all.add(Booster('weed', 1000))
+                    weed_counter = -1
+                    WEED_MODE = True
                 if gericht.boost_type in 'multi':
-                    pass
-                
+                    all.add(Booster('multi', 1000))
             # wenn gemuese einfach so das wars
             if gericht.type in 'gemuese':
                 vomit_sound.play()
@@ -379,14 +442,64 @@ def main(winstyle = 0):
                 
             # TO DO: IMPLEMENT BOOST FUNCTIONS
             gericht.kill()
+        
+        if SPEED_MODE:
+            if speed_counter == -1:
+                SPEED_MODIFIER = SPEED_MODIFIER_ENERGY
+                # update background
+                for x in range(0, SCREENRECT.width, background_boosters[0].get_width()):
+                    background.blit(background_boosters[0], (x,0))
+                for y in range(0, SCREENRECT.height, background_boosters[0].get_height()):
+                    background.blit(background_boosters[0], (0,y))    
+                screen.blit(background, (0,0))
+                pygame.display.flip()    
+                speed_counter = LENGTH_BOOST_ENERGY
+            else:
+                speed_counter = speed_counter-1
 
+            if speed_counter == 0:
+                SPEED_MODE = False
+                SPEED_MODIFIER = 1
+                speed_counter = -1
+                for x in range(0, SCREENRECT.width, background_images[level].get_width()):
+                    background.blit(background_images[level], (x,0))
+                for y in range(0, SCREENRECT.height, background_images[level].get_height()):
+                    background.blit(background_images[level], (0,y))    
+                screen.blit(background, (0,0))
+                pygame.display.flip()
+        
+        if WEED_MODE:
+            if weed_counter == -1:
+                # update background
+                for x in range(0, SCREENRECT.width, background_boosters[1].get_width()):
+                    background.blit(background_boosters[1], (x,0))
+                for y in range(0, SCREENRECT.height, background_boosters[1].get_height()):
+                    background.blit(background_boosters[1], (0,y))    
+                screen.blit(background, (0,0))
+                pygame.display.flip()    
+                weed_counter = LENGTH_BOOST_WEED
+            else:
+                weed_counter = speed_counter-1
+
+            if weed_counter == 0:
+                WEED_MODE = False
+                SPEED_MODIFIER = 1
+                speed_counter = -1
+                for x in range(0, SCREENRECT.width, background_images[level].get_width()):
+                    background.blit(background_images[level], (x,0))
+                for y in range(0, SCREENRECT.height, background_images[level].get_height()):
+                    background.blit(background_images[level], (0,y))    
+                screen.blit(background, (0,0))
+                pygame.display.flip()        
+        
+        
         #draw the scene
         dirty = all.draw(screen)
         pygame.display.update(dirty)
 
         #cap the framerate
         clock.tick(40)
-
+     
     if pygame.mixer:
         pygame.mixer.music.fadeout(1000)
     pygame.time.wait(1000)
