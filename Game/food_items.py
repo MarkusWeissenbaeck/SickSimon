@@ -13,24 +13,28 @@ Created on Mon Mar 19 19:31:00 2018
 '''
 
 import numpy as np
-food_items = [['apfel','gemuese', 1, 2, 'Apfel.gif'],
-              ['birne','gemuese', 1, 2, 'Birne.gif'],
-              ['banane','gemuese', 1, 2,'Banane.gif'],
-              ['mate','boost', 1, 1, 'energy', 'Mate.gif'],
-              ['brokkoli','gemuese', 1, 1,  'Brokkoli.gif'],
-              ['butter','boost', 1, 1, 'multi', 'Butter.gif'],
-              ['booster','boost', 1, 1, 'energy', 'EnergyBooster.gif'],
-              ['crazywolf','boost', 1, 1, 'energy', 'EnergyCrazyWolf.gif'],
-              ['flyingpower','boost', 1, 1, 'energy', 'EnergyFlyingPower.gif'],
-              ['gurke','gemuese', 1, 1, 'Gurke.gif'],
+food_items = [['apfel','gemuese', 1, 6, 'Apfel.gif'],
+              ['birne','gemuese', 1, 8, 'Birne.gif'],
+              ['banane','gemuese', 1, 5,'Banane.gif'],
+              ['mate','boost', 1, 6, 'energy', 'Mate.gif'],
+              ['brokkoli','gemuese', 1, 6,  'Brokkoli.gif'],
+              ['butter','boost', 1, 3, 'multi', 'Butter.gif'],
+              ['booster','boost', 1, 3, 'energy', 'EnergyBooster.gif'],
+              ['crazywolf','boost', 1, 3, 'energy', 'EnergyCrazyWolf.gif'],
+              ['flyingpower','boost', 1, 3, 'energy', 'EnergyFlyingPower.gif'],
+              ['gurke','gemuese', 1, 8, 'Gurke.gif'],
               ['joint','boost', 1, 2, 'weed', 'Joint.gif'],
-              ['lachgummi','gscheid', 1, 1, 20, 'LachgummiSauer.gif'],
-              ['milchreis','gscheid', 1,10, 20, 'Milchreis.gif'],
-              ['salat','gemuese', 1, 1,  'Salat.gif'],
-              ['schweinebauch','gscheid', 1, 10, 20, 'Schweinebauch.gif'],
-              ['steak','gscheid', 1, 10, 200, 'Steak.gif'],
-              ['tunfisch','gscheid', 1, 10, 200, 'Tunfisch.gif'],
-              ['zucker','boost', 1, 1, 'multi', 'Zucker.gif']
+              ['lachgummi','gscheid', 1, 10, 200, 'LachgummiSauer.gif'],
+              ['milchreis','gscheid', 1, 10, 100, 'Milchreis.gif'],
+              ['salat','gemuese', 1, 8,  'Salat.gif'],
+              ['schweinebauch','gscheid', 1, 5, 200, 'Schweinebauch.gif'],
+              ['chips','gscheid', 1, 10, 250, 'chips.gif'],
+              ['steak','gscheid', 1, 5, 200, 'Steak.gif'],
+              ['bucket','gscheid', 1, 6, 500, 'bucket.gif'],
+              ['fleischwurst','gscheid', 1, 3, 1000, 'Fleischwurst.gif'],
+              ['burger','gscheid', 1, 5, 500, 'Burger.gif'],
+              ['tunfisch','gscheid', 1, 11, 200, 'Tunfisch.gif'],
+              ['zucker','boost', 1, 3, 'multi', 'Zucker.gif']
               ]
 
               

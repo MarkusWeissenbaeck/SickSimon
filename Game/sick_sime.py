@@ -9,7 +9,7 @@ from pygame.locals import *
 from PIL import Image
 
 # import intro
-from Intro import*
+#from Intro import*
 #see if we can load more than standard BMP
 if not pygame.image.get_extended():
     raise SystemExit("Sorry, extended image module required")
@@ -18,18 +18,17 @@ if not pygame.image.get_extended():
 from food_items import *
 
 
-
 #game constants
 MAX_SHOTS      = 2      #most player bullets onscreen
-ESSEN_ODDS     = 10    #chances a new alien appears
+ESSEN_ODDS     = 30    #chances a new alien appears
 ESSEN_SIZE = [60, 60]
-BOMB_ODDS      = 100    #chances a new bomb will drop
+BOMB_ODDS      = 58    #chances a new bomb will drop
 ESSEN_RELOAD   = 1     #frames between new aliens
 SCREENRECT     = Rect(0, 0, 1200, 800)
 SCORE          = 0
 main_dir = os.path.split(os.path.abspath(__file__))[0]
-LEVEL_SCORES = [200, 1000, 4000, 8000, 16000]
-LEVEL_SPEEDS = [15, 13, 10, 9, 8]
+LEVEL_SCORES = [2000, 10000, 20000, 30000, 40000]
+LEVEL_SPEEDS = [15, 12, 8, 7, 6]
 
 # Booster stuff
 SPEED_MODIFIER = 1
@@ -39,6 +38,7 @@ SPEED_MODE = False
 LENGTH_BOOST_ENERGY = 450
 
 WEED_MODE = False
+EVENT_OVER = False
 LENGTH_BOOST_WEED = 450
 WEED_MOV_MIN = -8
 WEED_MOV_MAX = 8
@@ -46,6 +46,23 @@ WEED_MOV_MAX = 8
 LENGTH_BOOST_MULTI = 400
 MULTI_MODE = False
 MULTI_BOOST = 2
+
+# font colors
+black = (0,0,0)
+white = (255,255,255)
+red = (255,0,0)
+green = (34,139,34)
+bright_red = (255,0,0)
+bright_green = (0,255,0)
+
+display_width = 800
+display_height = 600
+
+clock = pygame.time.Clock()
+
+
+
+
 
 
 def load_image(file):
@@ -76,6 +93,70 @@ def load_sound(file):
     except pygame.error:
         print ('Warning, unable to load, %s' % file)
     return dummysound()
+
+
+
+def text_objects(text, font):
+    textSurface = font.render(text, True, black)
+    return textSurface, textSurface.get_rect()
+
+def ez_quit():
+    quit()
+    
+def ez_intro_quit():
+    pass
+
+def game_intro(screen):
+
+    intro = True
+    music_intro = os.path.join(os.path.split(os.path.abspath(__file__))[0], 'data/Sounds', 'intro_song.mp3')
+    pygame.mixer.music.load(music_intro )
+    pygame.mixer.music.play(-1)
+    while intro:
+        if not intro:
+            pygame.mixer.music.stop()
+        
+        for event in pygame.event.get():
+            #print(event)
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+                
+        screen.fill(white)
+        background = load_image('background/fatdude_simi.gif')
+        screen.blit(background, (0,0))
+        largeText = pygame.font.SysFont("arial",145)
+        TextSurf, TextRect = text_objects("SICK SIME", largeText)
+        TextRect.center = ((display_width/2),(display_height/2))
+        screen.blit(TextSurf, TextRect)
+        
+        intro = button(screen,"Quit",700,600,100,50,red,bright_red,pygame.quit)
+        intro = button(screen,"GO!",570,420,100,50,green,bright_green,action = ez_intro_quit)
+        
+
+        pygame.display.update()
+        clock.tick(15)
+        
+
+def button(screen,msg,x,y,w,h,ic,ac,action=None):
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()
+    if x+w > mouse[0] > x and y+h > mouse[1] > y:
+        pygame.draw.rect(screen, ac,(x,y,w,h))
+        if click[0] == 1 and action != None:
+            action()  
+            return False
+    else:
+        pygame.draw.rect(screen, ic,(x,y,w,h))
+        
+
+    smallText = pygame.font.SysFont("comicsansms",20)
+    textSurf, textRect = text_objects(msg, smallText)
+    textRect.center = ( (x+(w/2)), (y+(h/2)) )
+    screen.blit(textSurf, textRect)
+    return True
+
+
 
 
 
@@ -130,7 +211,7 @@ class Essen(pygame.sprite.Sprite):
         identity = get_food_item()
         # image
         self.image = pygame.transform.scale(load_image('Essen/' + identity[-1]), ESSEN_SIZE)
-        
+        self.name = identity[0]
         # speed (10 is normal)
         self.speed = identity[2]
         # type('gscheid', gemuese' or 'boost')
@@ -311,7 +392,7 @@ def main(winstyle = 0):
 
     background_images = [pygame.transform.scale(load_image(i), SCREENRECT.size) for i in ['background/LEW.jpg',
                                           'background/fatdude.jpg',
-                                          'background.gif',
+                                          'background/waste.jpg',
                                           'background.gif',
                                           'background.gif']]
     # background pictures for energy and weed boosters (in that order)
@@ -330,13 +411,18 @@ def main(winstyle = 0):
     eat_sound = load_sound('eating1.wav')
     vomit_sound = load_sound('vomit.wav')
     
+    
+    multi_sounds = ['data/Sounds/zucker1_sound.mp3',
+                    'data/Sounds/zucker2_sound.mp3',
+                    'data/Sounds/butter1_sound.mp3',
+                    'data/Sounds/butter2_sound.mp3']
     music_weed = os.path.join(main_dir, 'data/Sounds', 'weed_song.mp3')
     music_party = os.path.join(main_dir, 'data/Sounds', 'party_song.mp3')
     # initialize levels
     level = 0
 
     if pygame.mixer:
-        music_stanni = os.path.join(main_dir, 'data', 'house_lo.wav')
+        music_stanni = os.path.join(main_dir, 'data/Sounds', 'default_song.wav')
         pygame.mixer.music.load(music_stanni)
         pygame.mixer.music.play(-1)
 
@@ -367,6 +453,7 @@ def main(winstyle = 0):
     global SPEED_MODE
     global WEED_MODE
     global MULTI_MODE
+    global EVENT_OVER
     speed_counter = -1
     multi_counter = -1
     weed_counter = -1
@@ -430,7 +517,11 @@ def main(winstyle = 0):
             # wenn was gscheids dann dick bonus punkte
             if gericht.type in 'gscheid':
                 SCORE = SCORE + gericht.nutritional_value * (1 + MULTI_MODE*MULTI_BOOST)
-                eat_sound.play()
+                if gericht.name in 'fleischwurst':
+                    pygame.mixer.music.load('data/Sounds/fleischwurst_sound.mp3')
+                    pygame.mixer.music.play(-1)
+                else:
+                    eat_sound.play()
             if gericht.type in 'boost':
                 if gericht.boost_type in 'energy':
                     #all.add(Booster('energy', LENGTH_BOOST_ENERGY))
@@ -483,6 +574,7 @@ def main(winstyle = 0):
                 # play standard song
                 pygame.mixer.music.load(music_stanni)
                 pygame.mixer.music.play(-1)
+                EVENT_OVER = True
         if WEED_MODE:
             if weed_counter == -1:
                 # update background
@@ -511,17 +603,26 @@ def main(winstyle = 0):
                 # play standard song
                 pygame.mixer.music.load(music_stanni)
                 pygame.mixer.music.play(-1)
+                EVENT_OVER = True
         if MULTI_MODE:
             if multi_counter == -1:
                 # update background
                 multi_counter = LENGTH_BOOST_WEED
+                # play standard music
+                pygame.mixer.music.load(multi_sounds[random.randint(0, len(multi_sounds)-1)])
+                
+                pygame.mixer.music.play(-1)
             else:
                 multi_counter = multi_counter-1
 
-            if weed_counter == 0:
+            if multi_counter == 0:
                 MULTI_MODE = False
                 multi_counter = -1
-                
+                EVENT_OVER = True
+        if not(MULTI_MODE) and not(WEED_MODE) and not(SPEED_MODE) and EVENT_OVER:
+            pygame.mixer.music.load(music_stanni)
+            pygame.mixer.music.play(-1)
+            EVENT_OVER = False
         #draw the scene
         dirty = all.draw(screen)
         pygame.display.update(dirty)
