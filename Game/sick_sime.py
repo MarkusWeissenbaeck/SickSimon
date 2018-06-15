@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 import random, os.path
 
 #import basic pygame modules
@@ -7,6 +8,7 @@ import pygame
 from pygame.locals import *
 
 from PIL import Image
+
 
 # import intro
 #from Intro import*
@@ -26,7 +28,7 @@ BOMB_ODDS      = 58    #chances a new bomb will drop
 ESSEN_RELOAD   = 1     #frames between new aliens
 SCREENRECT     = Rect(0, 0, 1200, 800)
 SCORE          = 0
-main_dir = os.path.split(os.path.abspath(__file__))[0]
+#main_dir = os.path.split(os.path.abspath(__file__))[0]
 LEVEL_SCORES = [2000, 10000, 20000, 30000, 40000]
 LEVEL_SPEEDS = [15, 12, 8, 7, 6]
 
@@ -67,7 +69,7 @@ clock = pygame.time.Clock()
 
 def load_image(file):
     "loads an image, prepares it for play"
-    file = os.path.join(main_dir, 'data', file)
+    file = os.path.join('data', file)
     try:
         surface = pygame.image.load(file)
     except pygame.error:
@@ -86,7 +88,7 @@ class dummysound:
 
 def load_sound(file):
     if not pygame.mixer: return dummysound()
-    file = os.path.join(main_dir, 'data', file)
+    file = os.path.join('data', file)
     try:
         sound = pygame.mixer.Sound(file)
         return sound
@@ -109,7 +111,7 @@ def ez_intro_quit():
 def game_intro(screen):
 
     intro = True
-    music_intro = os.path.join(os.path.split(os.path.abspath(__file__))[0], 'data/Sounds', 'intro_song.mp3')
+    music_intro = os.path.join('data\Sounds', 'intro_song.mp3')
     pygame.mixer.music.load(music_intro )
     pygame.mixer.music.play(-1)
     while intro:
@@ -150,7 +152,7 @@ def button(screen,msg,x,y,w,h,ic,ac,action=None):
         pygame.draw.rect(screen, ic,(x,y,w,h))
         
 
-    smallText = pygame.font.SysFont("comicsansms",20)
+    smallText = pygame.font.SysFont("arial",20)
     textSurf, textRect = text_objects(msg, smallText)
     textRect.center = ( (x+(w/2)), (y+(h/2)) )
     screen.blit(textSurf, textRect)
@@ -246,7 +248,7 @@ class Explosion(pygame.sprite.Sprite):
     images = []
     def __init__(self, actor):
         pygame.sprite.Sprite.__init__(self, self.containers)
-        self.font = pygame.font.Font(None, 45)
+        self.font = pygame.font.SysFont("arial",20)
         self.image = self.images[0]
         self.rect = self.image.get_rect(center=actor.rect.center)
         self.life = self.defaultlife
@@ -328,7 +330,8 @@ class Booster(pygame.sprite.Sprite):
 class Score(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.font = pygame.font.Font(None, 45)
+        
+        self.font = pygame.font.SysFont("arial",45)
         self.font.set_italic(1)
         self.color = Color('white')
         self.lastscore = -1
@@ -416,13 +419,13 @@ def main(winstyle = 0):
                     'data/Sounds/zucker2_sound.mp3',
                     'data/Sounds/butter1_sound.mp3',
                     'data/Sounds/butter2_sound.mp3']
-    music_weed = os.path.join(main_dir, 'data/Sounds', 'weed_song.mp3')
-    music_party = os.path.join(main_dir, 'data/Sounds', 'party_song.mp3')
+    music_weed = os.path.join('data/Sounds', 'weed_song.mp3')
+    music_party = os.path.join('data/Sounds', 'party_song.mp3')
     # initialize levels
     level = 0
 
     if pygame.mixer:
-        music_stanni = os.path.join(main_dir, 'data/Sounds', 'default_song.wav')
+        music_stanni = os.path.join('data/Sounds', 'default_song.wav')
         pygame.mixer.music.load(music_stanni)
         pygame.mixer.music.play(-1)
 
